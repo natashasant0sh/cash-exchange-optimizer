@@ -14,16 +14,17 @@ typedef struct {
     int capacity;
 } HashMap;
 
+typedef struct {
+    char** names;
+    int size;
+} Group;
+
 void initHashMap(HashMap* hashMap) {
     hashMap->array = malloc(10 * sizeof(KeyValuePair));
     hashMap->size = 0;
     hashMap->capacity = 10;
 }
 
-typedef struct {
-    char** names;
-    int size;
-} Group;
 
 void put(HashMap* hashMap, char* key, double value) {
     // Check if the key already exists in the HashMap
