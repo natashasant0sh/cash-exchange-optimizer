@@ -16,17 +16,23 @@ typedef struct {
 
 typedef struct {
     char** names;
+    char *gname;
     int size;
 } Group;
 
-void initHashMap(HashMap* hashMap) {
+FILE *fp;
+
+
+void initHashMap(HashMap* hashMap) 
+{
     hashMap->array = malloc(10 * sizeof(KeyValuePair));
     hashMap->size = 0;
     hashMap->capacity = 10;
 }
 
 
-void put(HashMap* hashMap, char* key, double value) {
+void put(HashMap* hashMap, char* key, double value) 
+{
     // Check if the key already exists in the HashMap
     for (int i = 0; i < hashMap->size; i++) {
         if (strcmp(hashMap->array[i].key, key) == 0) {
@@ -47,7 +53,8 @@ void put(HashMap* hashMap, char* key, double value) {
     hashMap->size++;
 }
 
-KeyValuePair max(HashMap* hashMap) {
+KeyValuePair max(HashMap* hashMap) 
+{
     KeyValuePair maxPair = hashMap->array[0];
     for (int i = 1; i < hashMap->size; i++) {
         if (hashMap->array[i].value > maxPair.value) {
@@ -67,7 +74,8 @@ KeyValuePair min(HashMap* hashMap) {
     return minPair;
 }
 
-double roundToPlaces(double value, int places) {
+double roundToPlaces(double value, int places) 
+{
     if (places < 0) {
         printf("Error: Number of decimal places cannot be negative.\n");
         return -1.0;
@@ -76,6 +84,7 @@ double roundToPlaces(double value, int places) {
     double multiplier = pow(10.0, places);
     return round(value * multiplier) / multiplier;
 }
+
 
 
 void findPath(HashMap* details) 
@@ -106,11 +115,11 @@ void findPath(HashMap* details)
         double result = maxCredit.value + minDebit.value;
         result = roundToPlaces(result, 1);
         if (result >= 0.0) {
-            printf("%s needs to pay %s: %.2f\n", minDebit.key, maxCredit.key, fabs(minDebit.value));
+            fprintf(fp, "%s,%s,%.2f,Payment\n", minDebit.key, maxCredit.key, fabs(minDebit.value));
             put(details, maxCredit.key, result);
             put(details, minDebit.key, 0.0);
         } else {
-            printf("%s needs to pay %s: %.2f\n", minDebit.key, maxCredit.key, fabs(maxCredit.value));
+            fprintf(fp, "%s,%s,%.2f,Payment\n", minDebit.key, maxCredit.key, fabs(maxCredit.value));
             put(details, maxCredit.key, 0.0);
             put(details, minDebit.key, result);
         }
@@ -119,7 +128,8 @@ void findPath(HashMap* details)
 }
 
 // Function to get key from value
-char* getKeyFromValue(HashMap* hashMap, double value) {
+char* getKeyFromValue(HashMap* hashMap, double value) 
+{
     for (int i = 0; i < hashMap->size; i++) {
         if (hashMap->array[i].value == value) {
             return hashMap->array[i].key;
@@ -141,6 +151,7 @@ double getValue(HashMap* hashMap, char* key) {
 void addDebt(HashMap* hashMap, void* debtor, char* creditor, double amount, int isGroup, double* splits) {
     if (isGroup) {
         Group* group = (Group*) debtor;
+        fprintf(fp, "%s,%s,%.2f,Debt Added\n", group->gname, creditor, amount);
         for (int i = 0; i < group->size; i++) {
             char* debtorName = group->names[i];
             double debtorValue = getValue(hashMap, debtorName);
@@ -151,6 +162,7 @@ void addDebt(HashMap* hashMap, void* debtor, char* creditor, double amount, int 
         put(hashMap, creditor, creditorValue + amount);
     } else {
         char* debtorName = (char*) debtor;
+        fprintf(fp, "%s,%s,%.2f,Debt Added\n", debtorName, creditor, amount);
         double debtorValue = getValue(hashMap, debtorName);
         double creditorValue = getValue(hashMap, creditor);
         put(hashMap, debtorName, debtorValue - amount);
@@ -158,7 +170,10 @@ void addDebt(HashMap* hashMap, void* debtor, char* creditor, double amount, int 
     }
 }
 
+
 int main() {
+    fp = fopen("output.csv", "w+");
+    fprintf(fp, "Debtor,Creditor,Amount,Transaction\n");
     HashMap parm;
     initHashMap(&parm);
     Group groups[10];  // Array to store up to 10 groups
@@ -168,22 +183,25 @@ int main() {
     char paymentType[10];
     scanf("%s", paymentType);
 
-    if (strcmp(paymentType, "group") == 0) {
-        // Create a new group
+    if (strcmp(paymentType, "group") == 0) 
+    {
         printf("Enter group name: ");
         char groupName[50];
         scanf("%s", groupName);
 
         printf("Enter names of group members (enter 'done' when finished): ");
         Group* group = &groups[groupCount++];
-        group->names = malloc(10 * sizeof(char*));  // Start with space for 10 names
-        group->size = 0;  // Start with 0 names
+        group->names = malloc(10 * sizeof(char*)); 
+        group->size = 0; 
+
+        group->gname = malloc(strlen(groupName) + 1); // Allocate memory for group name
+        strcpy(group->gname, groupName); 
+
         char name[50];
         while (scanf("%s", name) == 1 && strcmp(name, "done") != 0) 
         {
             if (group->size % 10 == 0 && group->size > 0) 
             {
-                // If the array is full, double its size
                 group->names = realloc(group->names, (group->size * 2) * sizeof(char*));
             }
             group->names[group->size] = malloc(50);
@@ -260,5 +278,6 @@ else if (strcmp(paymentType, "individual") == 0) {
 
     findPath(&parm);
 
+    fclose(fp);
     return 0;
 }
