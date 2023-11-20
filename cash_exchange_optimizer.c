@@ -151,7 +151,13 @@ double getValue(HashMap* hashMap, char* key) {
 void addDebt(HashMap* hashMap, void* debtor, char* creditor, double amount, int isGroup, double* splits) {
     if (isGroup) {
         Group* group = (Group*) debtor;
-        fprintf(fp, "%s,%s,%.2f,Debt Added\n", group->gname, creditor, amount);
+        char splitsStr[100] = ""; // Initialize an empty string to store the splits array
+        for (int i = 0; i < group->size; i++) {
+            char temp[10];
+            sprintf(temp, "%.2f,", splits[i]); // Convert each split value to a string and append it to splitsStr
+            strcat(splitsStr, temp);
+        }
+        fprintf(fp, "%s,%s,%.2f,Debt Added, %s\n", group->gname, creditor, amount, splitsStr);
         for (int i = 0; i < group->size; i++) {
             char* debtorName = group->names[i];
             double debtorValue = getValue(hashMap, debtorName);
@@ -168,12 +174,13 @@ void addDebt(HashMap* hashMap, void* debtor, char* creditor, double amount, int 
         put(hashMap, debtorName, debtorValue - amount);
         put(hashMap, creditor, creditorValue + amount);
     }
+
 }
 
 
 int main() {
     fp = fopen("output.csv", "w+");
-    fprintf(fp, "Debtor,Creditor,Amount,Transaction\n");
+    fprintf(fp, "Debtor,Creditor,Amount,Transaction, Splits\n");
     HashMap parm;
     initHashMap(&parm);
     Group groups[10];  // Array to store up to 10 groups
@@ -275,6 +282,8 @@ else if (strcmp(paymentType, "individual") == 0) {
             addDebt(&parm, debtor, creditor, amount, 0, NULL);
         }
     }
+
+    fprintf(fp,"\n" );
 
     findPath(&parm);
 
