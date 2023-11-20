@@ -1,0 +1,8 @@
+Debtor,Creditor,Amount,Transaction, Splits
+abc,nat,500.00,Debt Added, 125.00,125.00,125.00,125.00,
+abc,neha,600.00,Debt Added, 150.00,150.00,150.00,150.00,
+abc,nair,600.00,Debt Added, 180.00,180.00,180.00,60.00,
+
+neelu,neha,145.00,Payment
+neelu,nair,145.00,Payment
+neelu,nat,45.00,Payment
